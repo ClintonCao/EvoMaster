@@ -8,6 +8,7 @@ import org.evomaster.core.search.service.monitor.SearchProcessMonitor
 import org.evomaster.core.search.service.mutator.MutatedGeneSpecification
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 
 abstract class FitnessFunction<T>  where T : Individual {
@@ -128,6 +129,7 @@ abstract class FitnessFunction<T>  where T : Individual {
         actionsSize: Int
     ) : EvaluatedIndividual<T>?{
 
+        val startTime = LocalDateTime.now().format(config.modelInfTSFormat)
         val ei = SearchTimeController.measureTimeMillis(
                 { t, ind ->
                     time.reportExecutedIndividualTime(t, actionsSize)
@@ -137,6 +139,8 @@ abstract class FitnessFunction<T>  where T : Individual {
         )
         // plugin execution info reporter here, to avoid the time spent by execution reporter
         handleExecutionInfo(ei)
+        val stopTime = LocalDateTime.now().format(config.modelInfTSFormat)
+        executionInfoReporter.addExecutedIndividualStats(startTime.toString(), stopTime.toString(), individual.seeMainExecutableActions())
         return ei
     }
     /**
@@ -158,4 +162,10 @@ abstract class FitnessFunction<T>  where T : Individual {
         executionInfoReporter.sqlExecutionInfo(ei.individual.seeAllActions(), ei.fitness.databaseExecutions)
         executionInfoReporter.actionExecutionInfo(ei.individual, ei.executionTimeMs, time.evaluatedIndividuals)
     }
+
+
+    fun getExecutionInfoReporter(): ExecutionInfoReporter {
+        return this.executionInfoReporter
+    }
+
 }
