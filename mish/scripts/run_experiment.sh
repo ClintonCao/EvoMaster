@@ -10,6 +10,10 @@ APPLICATION=$4 # application name
 #ulimit -n 65535
 export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
 export JAVA_HOME_8=$(/usr/libexec/java_home -v 1.8)
+mkdir -p ./mish/logs
+mkdir -p ./mish/execution_stats
+mkdir -p ./mish/traces
+mkdir -p ./mish/fitness
 
 
 if [ -z "$ALGORITHM" ]; then
@@ -42,7 +46,7 @@ fi
 
 
 for i in {4..4}; do
-  
+
     if [ "$ALGORITHM" = "MISH" ] || [ "$ALGORITHM" = "MISHMOSA" ]; then
         # Clean the previous temp files
         ./mish/scripts/clean_up.sh

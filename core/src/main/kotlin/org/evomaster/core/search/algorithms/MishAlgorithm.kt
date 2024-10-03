@@ -301,13 +301,6 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
         writer.close()
     }
 
-    fun createMISHFolders() {
-        createDirectoryIfNotExists(config.fitnessDir)
-        createDirectoryIfNotExists(config.tracesDir)
-        createDirectoryIfNotExists(config.executionStatsDir)
-        createDirectoryIfNotExists(config.logFilePath.split("msa_logs.txt")[0])
-    }
-
     protected fun createDirectoryIfNotExists(path: String) {
         val directory = File(path)
         if (!directory.exists()) {
@@ -316,8 +309,6 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
             return
         }
     }
-
-
 
     fun waitForLearningStatus() {
         val statFileName = config.fitnessDir + "ff_learn_stat.txt"
