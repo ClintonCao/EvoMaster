@@ -237,7 +237,7 @@ class Main {
                     info("TCP timeouts: $timeouts")
                 }
 
-                info("Potential faults: ${faults.size}")
+//                info("Potential faults: ${faults.size}")
 
                 if (!config.blackBox || config.bbExperiments) {
                     val rc = injector.getInstance(RemoteController::class.java)
@@ -276,6 +276,11 @@ class Main {
                         //assert(linesInfo.total <= totalLines){ "WRONG COVERAGE: ${linesInfo.total} > $totalLines"}
 
                         info("Covered targets (lines, branches, faults, etc.): ${targetsInfo.total}")
+
+                        info("Potential faults: ${faults.size}")
+                        info("Potential faults IDs: ${faults.toMutableSet()}")
+                        info("Potential 500 faults: ${solution.overall.potential500Faults(idMapper).size}")
+                        info("Potential 500 faults IDs: ${solution.overall.potential500Faults(idMapper).toMutableSet()}")
 
                         if(totalLines == 0 || units == 0){
                             logError("Detected $totalLines lines to cover, for a total of $units units/classes." +
@@ -513,6 +518,10 @@ class Main {
                     Key.get(object : TypeLiteral<WtsAlgorithm<WebIndividual>>() {})
                 EMConfig.Algorithm.MOSA ->
                     Key.get(object : TypeLiteral<MosaAlgorithm<WebIndividual>>() {})
+                EMConfig.Algorithm.MISH ->
+                    Key.get(object : TypeLiteral<MishAlgorithm<WebIndividual>>() {})
+                EMConfig.Algorithm.MISHMOSA ->
+                    Key.get(object : TypeLiteral<MishMosaAlgorithm<WebIndividual>>() {})
                 else -> throw IllegalStateException("Unrecognized algorithm ${config.algorithm}")
             }
         }
@@ -530,6 +539,10 @@ class Main {
                     Key.get(object : TypeLiteral<WtsAlgorithm<RestIndividual>>() {})
                 EMConfig.Algorithm.MOSA ->
                     Key.get(object : TypeLiteral<MosaAlgorithm<RestIndividual>>() {})
+                EMConfig.Algorithm.MISH ->
+                    Key.get(object : TypeLiteral<MishAlgorithm<RestIndividual>>() {})
+                EMConfig.Algorithm.MISHMOSA ->
+                    Key.get(object : TypeLiteral<MishMosaAlgorithm<RestIndividual>>() {})
                 else -> throw IllegalStateException("Unrecognized algorithm ${config.algorithm}")
             }
         }
