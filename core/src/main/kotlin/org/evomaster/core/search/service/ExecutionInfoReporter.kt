@@ -7,6 +7,7 @@ import org.evomaster.core.search.action.Action
 import org.evomaster.core.search.Individual
 import org.evomaster.core.utils.ReportWriter.wrapWithQuotation
 import org.evomaster.core.utils.ReportWriter.writeByChannel
+import java.io.File
 import java.nio.file.Paths
 
 /**
@@ -31,6 +32,17 @@ class ExecutionInfoReporter {
     private val executedSqlAction: MutableList<DatabaseExecution> = mutableListOf()
 
     private var hasHeader: Boolean = false
+
+
+    /**
+     * Keep track of some other execution info (used by MISH).
+     */
+    private var executedIndividualsStats: MutableList<String> = mutableListOf()
+
+    private var executedIndividualId: Int = 1
+
+    private var lastWrittenIndividualId: Int = 0
+
 
     /**
      * @param actions are endpoints to be executed
@@ -136,4 +148,31 @@ class ExecutionInfoReporter {
             executedMainAction.joinToString(System.lineSeparator()) {it},
             false)
     }
+
+    fun saveIntermediateExecutionStats(outName: String) {
+        saveExecutedIndividualStatsToFile(config.executionStatsDir, outName)
+    }
+
+    fun addExecutedIndividualStats(startTime: String, endTime: String, mainActions: List<Action>) {
+        this.executedIndividualsStats.add("$executedIndividualId,$startTime,$endTime,${mainActions.size},${mainActions.joinToString(separator="|")}")
+        this.executedIndividualId += 1
+    }
+
+    private fun saveExecutedIndividualStatsToFile(out_location: String, outName: String){
+        val writer = File("${out_location}EvoMasterExecutionStats_${outName}.csv").bufferedWriter()
+        var lastIndividualId = -1
+        for (s in executedIndividualsStats) {
+            val id = s.split(',')[0].toInt()
+            if (id <= lastWrittenIndividualId) {
+                continue
+            }
+            else{
+                lastIndividualId = id
+                writer.write(s + "\n")
+            }
+        }
+        writer.close()
+        lastWrittenIndividualId = lastIndividualId
+    }
+
 }
