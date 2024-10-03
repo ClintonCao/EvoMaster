@@ -24,7 +24,6 @@ class MishMosaAlgorithm<T> : MishAlgorithm<T>() where T: Individual {
         initMIFramework()
         population = evaluateIndividuals(initPopulation())
         iteration = 0
-        createMISHFolders()
     }
 
     private fun initPopulation(): MutableList<Individual> {

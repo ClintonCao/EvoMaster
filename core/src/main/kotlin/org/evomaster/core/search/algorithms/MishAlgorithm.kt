@@ -44,7 +44,6 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
         initMIFramework()
         population = evaluateIndividuals(initPopulation())
         iteration = 0
-        createMISHFolders()
     }
 
     override fun searchOnce() {
