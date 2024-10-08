@@ -31,8 +31,9 @@ if [ -z "$OUTPUT_NAME_FORMAT" ]; then
   exit 1
 fi
 
-# APPLICATION_JAR_FOLDER=$HOME/Documents/Git/EMB/jdk_8_maven/emb_jars/
-APPLICATION_JAR=$PWD/$APPLICATION-evomaster-runner.jar
+# Point to the "emb_jars" folder that contains all the jars of the EMB dataset.
+JAR_FOLDER=$PWD/emb_jars/
+APPLICATION_JAR=$JAR_FOLDER$APPLICATION-evomaster-runner.jar
 
 if [ ! -f "$APPLICATION_JAR" ]; then
   echo "The application jar file does not exist. Please check the path."
@@ -45,7 +46,7 @@ if [ "$ALGORITHM" = "MISH" ] || [ "$ALGORITHM" = "MISHMOSA" ]; then
 fi
 
 
-for i in {4..4}; do
+for i in {1..1}; do
 
     if [ "$ALGORITHM" = "MISH" ] || [ "$ALGORITHM" = "MISHMOSA" ]; then
         # Clean the previous temp files
@@ -54,14 +55,14 @@ for i in {4..4}; do
         # Then start the SUT
         {
           {
-            java -jar -Devomaster.instrumentation.jar.path=evomaster-agent.jar $APPLICATION_JAR 40100 12345 . 2>&1
+            java -jar -Devomaster.instrumentation.jar.path=$JAR_FOLDER/evomaster-agent.jar $APPLICATION_JAR 40100 12345 $JAR_FOLDER 2>&1
           } | tee mish/logs/msa_logs.txt
         } > /dev/null &
 
     else
         # Start the SUT
         ./mish/scripts/clean_up.sh
-        java -jar -Devomaster.instrumentation.jar.path=evomaster-agent.jar $APPLICATION_JAR 40100 12345 . > /dev/null 2>&1 &
+        java -jar -Devomaster.instrumentation.jar.path=$JAR_FOLDER/evomaster-agent.jar $APPLICATION_JAR 40100 12345 $JAR_FOLDER > /dev/null 2>&1 &
     fi
 
     sleep 5 # Wait for the SUT to start
