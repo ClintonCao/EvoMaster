@@ -42,7 +42,7 @@ fi
 
 if [ "$ALGORITHM" = "MISH" ] || [ "$ALGORITHM" = "MISHMOSA" ]; then
     # Clean up temp file from previous runs.
-    ./mish/scripts/clean_up.sh
+    ./mish/scripts/clean_up.sh $JAR_FOLDER
 fi
 
 
@@ -50,7 +50,7 @@ for i in {1..1}; do
 
     if [ "$ALGORITHM" = "MISH" ] || [ "$ALGORITHM" = "MISHMOSA" ]; then
         # Clean the previous temp files
-        ./mish/scripts/clean_up.sh
+        ./mish/scripts/clean_up.sh $JAR_FOLDER
 
         # Then start the SUT
         {
@@ -75,9 +75,9 @@ for i in {1..1}; do
     } | tee $PWD/"$APPLICATION"_"$OUTPUT_NAME_FORMAT"_EM_logs_"$ALGORITHM"_$i.txt
 
     # Kill the SUT
-    PID=$(pgrep -f "$APPLICATION_JAR 40100 12345 .")
+    PID=$(pgrep -f "$APPLICATION_JAR 40100 12345 $JAR_FOLDER")
     if [ -z "$PID" ]; then
-        echo "No process found with the command '$APPLICATION_JAR 40100 12345 .'."
+        echo "No process found with the command '$APPLICATION_JAR 40100 12345 $JAR_FOLDER'."
     else
         # Kill the process
         kill -9 $PID

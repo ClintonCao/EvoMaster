@@ -1,4 +1,5 @@
 #!/bin/sh
+JAR_FOLDER=$1
 
 # First remove all files within the "execution_stats" folder
 rm -rf $PWD/mish/execution_stats/*
@@ -28,9 +29,9 @@ else
 fi
 
 # Kill the SUT if one is already running.
-PID=$(pgrep -f "jar 40100 12345 .")
+PID=$(pgrep -f "jar 40100 12345 $1")
 if [ -z "$PID" ]; then
-    echo "No process found with the command 'jar 40100 12345 .'"
+    echo "No process found with the command 'jar 40100 12345 $1'"
 else
     # Kill the process
     kill -9 $PID
