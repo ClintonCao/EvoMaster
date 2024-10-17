@@ -151,7 +151,7 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
 
     private fun generateOffspringPop(candidates:MutableList<EvalData>): MutableList<Individual> {
         val offspringPop: MutableList<Individual> = mutableListOf()
-        while(offspringPop.size < config.populationSize - 3) {
+        while(offspringPop.size < config.populationSize - (config.populationSize * 0.1).toInt()) {
             // select best candidate based on tournament selection
             val bestCandidate = selection(candidates)
 
@@ -220,7 +220,7 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
         if (!checkForFile(executionStatsFilePath)) {
             throw RuntimeException("Cannot find execution stats file: $executionStatsFilePath")
         }
-        val command = mutableListOf("python3.9", config.modelInfLogProcessorScriptPath)
+        val command = mutableListOf("python3", config.modelInfLogProcessorScriptPath)
         command.add("--log_file")
         command.add(config.logFilePath)
         command.add("--execution_stats_file")
