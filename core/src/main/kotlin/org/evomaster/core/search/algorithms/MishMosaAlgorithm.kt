@@ -364,92 +364,70 @@ class MishMosaAlgorithm<T> : MishAlgorithm<T>() where T: Individual {
         writer.close()
     }
 
-    fun hammingDistance(trace1: List<Int>, trace2: List<Int>): Int {
-        // Calculate the Hamming distance (differences) between two traces
-        val minLength = minOf(trace1.size, trace2.size)
-        var distance = 0
+    // Optimized function to calculate the length of the Longest Common Substring between two lists of tokens
+    fun longestCommonSubstringLength(tokens1: List<String>, tokens2: List<String>): Int {
+        if (tokens1.isEmpty() || tokens2.isEmpty()) return 0
 
-        for (i in 0 until minLength) {
-            if (trace1[i] != trace2[i]) {
-                distance++
-            }
-        }
+        // Ensure tokens1 is the smaller list (to optimize space)
+        val (smaller, larger) = if (tokens1.size <= tokens2.size) Pair(tokens1, tokens2) else Pair(tokens2, tokens1)
 
-        // Account for the difference in lengths
-        distance += kotlin.math.abs(trace1.size - trace2.size)
+        // Create two arrays to store only the current and previous row of the dynamic programming table
+        val prevRow = IntArray(smaller.size + 1)
+        val currRow = IntArray(smaller.size + 1)
 
-        return distance
-    }
+        var maxLength = 0
 
-    fun jaccardDistance(trace1: String, trace2: String): Double {
-        // Convert the traces (space-separated numbers) to sets of numbers
-        val set1 = trace1.split(" ").map { it.toInt() }.toSet()  // Split the string by spaces and convert to a set of Ints
-        val set2 = trace2.split(" ").map { it.toInt() }.toSet()
-
-        // Calculate intersection and union
-        val intersection = set1.intersect(set2).size
-        val union = set1.union(set2).size
-
-        // Jaccard distance: 1 - (intersection / union)
-        return 1 - (intersection.toDouble() / union)
-    }
-
-    // Function to calculate the LCS length between two traces
-    fun lcsLength(trace1: String, trace2: String): Int {
-        val tokens1 = trace1.split(" ")
-        val tokens2 = trace2.split(" ")
-
-        val dp = Array(tokens1.size + 1) { IntArray(tokens2.size + 1) }
-
-        for (i in 1..tokens1.size) {
-            for (j in 1..tokens2.size) {
-                dp[i][j] = if (tokens1[i - 1] == tokens2[j - 1]) {
-                    dp[i - 1][j - 1] + 1
+        // Iterate over larger list (outer loop)
+        for (i in 1..larger.size) {
+            for (j in 1..smaller.size) {
+                if (larger[i - 1] == smaller[j - 1]) {
+                    currRow[j] = prevRow[j - 1] + 1
+                    maxLength = maxOf(maxLength, currRow[j]) // Update max length
                 } else {
-                    maxOf(dp[i - 1][j], dp[i][j - 1])
+                    currRow[j] = 0 // Reset if no match
                 }
             }
+            // Swap rows: current becomes previous
+            System.arraycopy(currRow, 0, prevRow, 0, currRow.size)
         }
 
-        return dp[tokens1.size][tokens2.size]
+        return maxLength
     }
 
-    // Function to calculate LCS-based distance
-    fun lcsDistance(trace1: String, trace2: String): Double {
-        val lcsLen = lcsLength(trace1, trace2)
-        val maxLen = maxOf(trace1.split(" ").size, trace2.split(" ").size)
+    // Function to calculate Longest Common Substring-based distance
+    fun longestCommonSubstringDistance(tokens1: List<String>, tokens2: List<String>): Double {
+        val lcsLen = longestCommonSubstringLength(tokens1, tokens2)
+        val maxLen = maxOf(tokens1.size, tokens2.size)
 
-        // LCS distance is inversely proportional to LCS length
-        return 1 - (lcsLen.toDouble() / maxLen)
+        // Return the LCS distance: (1 - normalized LCS length)
+        return 1.0 - (lcsLen.toDouble() / maxLen)
     }
 
+    // Optimized version to calculate pairwise diversity with minimum distance calculation
     private fun calculatePairwiseDiversity(individuals: List<EvalData>) {
-           val n = individuals.size
+        val n = individuals.size
 
-           // Create a matrix to store pairwise distances
-           val distances = Array(n) { DoubleArray(n) }
+        // Precompute the split tokens once
+        val tokenizedTraces = individuals.map { it.trace.split(" ") }
 
-           // Calculate pairwise Jaccard distances
-           for (i in 0 until n) {
-               for (j in i + 1 until n) {
-                   val distance = lcsDistance(individuals[i].trace, individuals[j].trace)
-                   distances[i][j] = distance
-                   distances[j][i] = distance // Symmetric, so fill both
-               }
-           }
+        // Initialize a minDistance vector to store minimum distances for each individual
+        val minDistances = DoubleArray(n) { Double.MAX_VALUE }
 
-           // Find the minimum distance for each individual
-           for (i in 0 until n) {
-               var minDistance = Double.MAX_VALUE
+        // Calculate pairwise LCS distances and track minimum distances
+        for (i in 0 until n) {
+            for (j in i + 1 until n) {
+                // Calculate LCS distance once for the pair (i, j)
+                val distance = longestCommonSubstringDistance(tokenizedTraces[i], tokenizedTraces[j])
 
-               for (j in 0 until n) {
-                   if (i != j) {
-                       minDistance = minOf(minDistance, distances[i][j])
-                   }
-               }
+                // Update the minimum distances for both i and j
+                minDistances[i] = minOf(minDistances[i], distance)
+                minDistances[j] = minOf(minDistances[j], distance)
+            }
+        }
 
-               // Assign the minimum distance to the individual
-               individuals[i].crowdingDistance += minDistance
-           }
-       }
+        // Update crowding distances after all minimum distances are calculated
+        for (i in 0 until n) {
+            individuals[i].crowdingDistance += minDistances[i]
+        }
+    }
 }
