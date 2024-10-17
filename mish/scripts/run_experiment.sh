@@ -3,8 +3,6 @@ ALGORITHM=$1 # MOSA, MISH, RANDOM, MISHMOSA
 TIME_BUDGET=$2 # time budget in minutes
 OUTPUT_NAME_FORMAT=$3 # output name format
 APPLICATION=$4 # application name
-export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
-export JAVA_HOME_8=$(/usr/libexec/java_home -v 1.8)
 mkdir -p $PWD/mish/logs
 mkdir -p $PWD/mish/execution_stats
 mkdir -p $PWD/mish/traces
