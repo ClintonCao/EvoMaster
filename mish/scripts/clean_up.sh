@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 JAR_FOLDER=$1
 
 # First remove all files within the "execution_stats" folder
