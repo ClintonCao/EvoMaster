@@ -744,7 +744,7 @@ class EMConfig {
         throw IllegalArgumentException("Invalid boolean value: $s")
     }
 
-    fun shouldGenerateSqlData() = isMIO() && (generateSqlDataWithDSE || generateSqlDataWithSearch)
+    fun shouldGenerateSqlData() = (isMIO() || isMOSA() || isMISH()) && (generateSqlDataWithDSE || generateSqlDataWithSearch)
 
     fun shouldGenerateMongoData() = generateMongoData
 
@@ -2364,7 +2364,7 @@ class EMConfig {
     /**
      * impact info can be collected when archive-based solution is enabled or doCollectImpact
      */
-    fun isEnabledImpactCollection() = isMIO() && doCollectImpact || isEnabledArchiveGeneSelection()
+    fun isEnabledImpactCollection() = isMIO()  && doCollectImpact || isEnabledArchiveGeneSelection()
 
     /**
      * @return whether archive-based gene selection is enabled
@@ -2382,7 +2382,7 @@ class EMConfig {
     /**
      * @return whether enable resource-based method
      */
-    fun isEnabledResourceStrategy() = isMIO() && resourceSampleStrategy != ResourceSamplingStrategy.NONE
+    fun isEnabledResourceStrategy() = (isMIO() || isMOSA() || isMISH()) && resourceSampleStrategy != ResourceSamplingStrategy.NONE
 
     /**
      * @return whether enable resource-dependency based method
@@ -2421,9 +2421,9 @@ class EMConfig {
         return IdMapper.ALL_ACCEPTED_OBJECTIVE_PREFIXES.filter { excluded.contains(it.lowercase()) }
     }
 
-    fun isEnabledMutatingResponsesBasedOnActualResponse() = isMIO() && (probOfMutatingResponsesBasedOnActualResponse > 0)
+    fun isEnabledMutatingResponsesBasedOnActualResponse() = (isMIO() || isMOSA() || isMISH()) && (probOfMutatingResponsesBasedOnActualResponse > 0)
 
-    fun isEnabledHarvestingActualResponse(): Boolean = isMIO() && (probOfHarvestingResponsesFromActualExternalServices > 0 || probOfMutatingResponsesBasedOnActualResponse > 0)
+    fun isEnabledHarvestingActualResponse(): Boolean = (isMIO() || isMOSA() || isMISH()) && (probOfHarvestingResponsesFromActualExternalServices > 0 || probOfMutatingResponsesBasedOnActualResponse > 0)
 
     /**
      * Check if the used algorithm is MIO.
@@ -2432,16 +2432,18 @@ class EMConfig {
      * done as an extension of MIO.
      */
     fun isMIO() = algorithm == Algorithm.MIO || (algorithm == Algorithm.DEFAULT && !blackBox)
+    fun isMOSA() = algorithm == Algorithm.MOSA || algorithm == Algorithm.MISHMOSA
+    fun isMISH() = algorithm == Algorithm.MISH
 
-    fun isEnabledTaintAnalysis() = isMIO() && baseTaintAnalysisProbability > 0
+    fun isEnabledTaintAnalysis() = (isMIO() || isMOSA() || isMISH()) && baseTaintAnalysisProbability > 0
 
-    fun isEnabledSmartSampling() = (isMIO() || algorithm == Algorithm.SMARTS) && probOfSmartSampling > 0
+    fun isEnabledSmartSampling() = ((isMIO() || isMOSA() || isMISH()) || algorithm == Algorithm.SMARTS) && probOfSmartSampling > 0
 
-    fun isEnabledWeightBasedMutation() = isMIO() && weightBasedMutationRate
+    fun isEnabledWeightBasedMutation() = (isMIO() || isMOSA() || isMISH()) && weightBasedMutationRate
 
-    fun isEnabledInitializationStructureMutation() = isMIO() && initStructureMutationProbability > 0 && maxSizeOfMutatingInitAction > 0
+    fun isEnabledInitializationStructureMutation() = (isMIO() || isMOSA() || isMISH()) && initStructureMutationProbability > 0 && maxSizeOfMutatingInitAction > 0
 
-    fun isEnabledResourceSizeHandling() = isMIO() && probOfHandlingLength > 0 && maxSizeOfHandlingResource > 0
+    fun isEnabledResourceSizeHandling() = (isMIO() || isMOSA() || isMISH()) && probOfHandlingLength > 0 && maxSizeOfHandlingResource > 0
 
     fun getTagFilters() = endpointTagFilter?.split(",")?.map { it.trim() } ?: listOf()
 
