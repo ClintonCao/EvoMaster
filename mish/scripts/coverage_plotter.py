@@ -17,6 +17,11 @@ def interp_coverage_values(base_coverage, budget, covered_targets):
     interp_coverage = np.interp(base_coverage, budget, covered_targets)
     return interp_coverage
 
+def confidence_interval_with_clipping(data):
+    ci = sns.algorithms.bootstrap(data, func=np.mean, n_boot=1000)
+    # Clip the lower bound to 0
+    return np.clip(ci, 0, None)
+
 def read_log_file(filename):
     with open(filename, 'r') as f:
         lines = f.readlines()
@@ -48,7 +53,7 @@ def main():
     runs = 10
     version = 'v320'
     fitness_function = 'lower_median'
-    results_folder = f'../../results_{application}_{version}_{fitness_function}'
+    results_folder = f'../../results_{application}_{version}_{fitness_function}_1hour_better_selection_strat'
     method_run_data = []
     for m in methods:
         for i in range(1, runs + 1):
@@ -61,14 +66,15 @@ def main():
                 method_run_data.append([m, i, base_budget[j], interp_coverage[j]])
         
     df = pd.DataFrame(method_run_data, columns=['Method', 'Run', 'Budget', 'Coverage'])
+    df.to_csv(f'{results_folder}/coverage_data.csv', index=False)
     # Create the line plot
     plt.figure(figsize=(10, 6))
-    sns.lineplot(data=df, x='Budget', y='Coverage', hue='Method', errorbar='sd')
+    sns.lineplot(data=df, x='Budget', y='Coverage', hue='Method', errorbar=('ci', 95))
     
     # Customize the plot
-    plt.title('Coverage over time')
-    plt.xlabel('Budget')
-    plt.ylabel('Coverage')
+    plt.title(f'Coverage over time EvoMaster - {application} - {version}')
+    plt.xlabel('Budget Used (%)')
+    plt.ylabel('Coverage (Targets)')
     plt.grid(True)
 
     # Show the plot
