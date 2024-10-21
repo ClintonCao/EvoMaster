@@ -48,14 +48,14 @@ for i in {1..1}; do
         # Then start the SUT
         {
           {
-            java -jar -Devomaster.instrumentation.jar.path=$JAR_FOLDER/evomaster-agent.jar $APPLICATION_JAR 40100 12345 $JAR_FOLDER 2>&1
+            java -Xss2m -jar -Devomaster.instrumentation.jar.path=$JAR_FOLDER/evomaster-agent.jar $APPLICATION_JAR 40100 12345 $JAR_FOLDER 2>&1
           } | tee mish/logs/msa_logs.txt
         } > /dev/null &
 
     else
         # Start the SUT
         ./mish/scripts/clean_up.sh
-        java -jar -Devomaster.instrumentation.jar.path=$JAR_FOLDER/evomaster-agent.jar $APPLICATION_JAR 40100 12345 $JAR_FOLDER > /dev/null 2>&1 &
+        java -Xss2m -jar -Devomaster.instrumentation.jar.path=$JAR_FOLDER/evomaster-agent.jar $APPLICATION_JAR 40100 12345 $JAR_FOLDER > /dev/null 2>&1 &
     fi
 
     sleep 5 # Wait for the SUT to start
@@ -63,7 +63,7 @@ for i in {1..1}; do
     # Then start EvoMaster
     {
         {
-            java -jar $PWD/core/target/evomaster.jar --maxTime "$TIME_BUDGET"m --algorithm $ALGORITHM --outputFolder "test_evo/"$APPLICATION"_"$OUTPUT_NAME_FORMAT"_"$ALGORITHM"_$i"
+            java -Xss2m -jar $PWD/core/target/evomaster.jar --maxTime "$TIME_BUDGET"m --algorithm $ALGORITHM --outputFolder "test_evo/"$APPLICATION"_"$OUTPUT_NAME_FORMAT"_"$ALGORITHM"_$i"
         } 2>&1 | ts '[%Y-%m-%d %H:%M:%S]';
     } | tee $PWD/"$APPLICATION"_"$OUTPUT_NAME_FORMAT"_EM_logs_"$ALGORITHM"_$i.txt
 
