@@ -111,20 +111,24 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
 
         // Update the model using the generated traces
 //        LoggingUtil.getInfoLogger().info("MISH ---- Updating model")
-        forwardTracesToModelInferenceFrameWork(true, "new")
+        forwardTracesToModelInferenceFrameWork(true, indBatchNr.toString())
 
 //        waitForOutput(config.fitnessDir + "model_batch_nr_${indBatchNr}.dot")
 
-        waitForLearningStatus()
+        if (!waitForLearningStatus()) {
+            restartDaemon()
+            forwardTracesToModelInferenceFrameWork(true, indBatchNr.toString())
+            waitForLearningStatus()
+        }
 
         //Compute the fitness of the individuals using their traces
-        forwardTracesToModelInferenceFrameWork(false, "new")
+        forwardTracesToModelInferenceFrameWork(false, indBatchNr.toString())
 
-        waitForOutput(config.fitnessDir + "ff_fitness_new.txt")
+        waitForOutput(config.fitnessDir + "ff_fitness_${indBatchNr}.txt")
 
 //        LoggingUtil.getInfoLogger().info("MISH ---- Updating fitness of individuals using model")
         // Update the fitness values.
-        collectAndUpdateFitness(evaluatedPopulation, "new")
+        collectAndUpdateFitness(evaluatedPopulation, indBatchNr.toString())
 
         this.indBatchNr++ // update the batch of individuals that we have just run.
 
@@ -226,7 +230,7 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
         command.add("--execution_stats_file")
         command.add(executionStatsFilePath)
         command.add("--output_file")
-        command.add("${config.tracesDir}EvoMaster_logs_traces_new.txt")
+        command.add("${config.tracesDir}EvoMaster_logs_traces_${outName}.txt")
 
         if (indBatchNr > 0) {
             command.add("--read_from")
@@ -276,15 +280,15 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
         process.waitFor()
     }
 
-    fun waitForOutput(outputFilePath: String) {
+    fun waitForOutput(outputFilePath: String): Boolean {
         val start = Instant.now()
         while (Duration.between(start, Instant.now()).toMillis() < config.timeOutForWaitingOutput) {
             if (checkForFile(outputFilePath)) {
-                return
+                return true
             }
         }
 
-        throw RuntimeException("File $outputFilePath cannot be found after waiting for more than ${config.timeOutForWaitingOutput / 1000} seconds")
+        return false
     }
 
     protected fun checkForFile(filePath: String) : Boolean {
@@ -309,7 +313,7 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
         }
     }
 
-    fun waitForLearningStatus() {
+    fun waitForLearningStatus(): Boolean {
         val statFileName = config.fitnessDir + "ff_learn_stat.txt"
         val start = Instant.now()
         while (Duration.between(start, Instant.now()).toMillis() < config.timeOutForWaitingOutput) {
@@ -317,18 +321,51 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
                 val numLines = getNumLinesFromFile(statFileName)
                 if (numLines > numDoneResponse) {
                     numDoneResponse = numLines
-                    return
+                    return true
                 }
             }
         }
 
-        throw RuntimeException("Waited for more than ${config.timeOutForWaitingOutput / 1000} seconds to receive \"done learning\" (num $numDoneResponse) update.")
-
+        return false
     }
 
     private fun getNumLinesFromFile(filePath: String): Int {
         return Files.lines(Paths.get(filePath)).use { it.count().toInt() }
     }
 
+    fun killDaemon(daemonCommand: String) {
+        try {
+            // Run the 'ps' command to find the daemon process by its command
+            val processBuilder = ProcessBuilder("bash", "-c", "ps aux | grep '$daemonCommand' | grep -v grep")
+            val process = processBuilder.start()
+
+            // Read the output of 'ps' command
+            val reader = BufferedReader(InputStreamReader(process.inputStream))
+            val processes = reader.readLines()
+
+            // Iterate over the processes and extract the PID (process ID)
+            for (processLine in processes) {
+                println("Found process: $processLine")
+                val parts = processLine.trim().split("\\s+".toRegex())
+                if (parts.size > 1) {
+                    val pid = parts[1] // The second column is the PID
+                    println("Killing process with PID: $pid")
+
+                    // Kill the process by PID
+                    val killProcess = ProcessBuilder("kill", pid).start()
+                    killProcess.waitFor() // Wait for the kill command to execute
+                    println("Process with PID $pid killed.")
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun restartDaemon() {
+        val daemonCommand = "./flexfringe --ini css-stream.ini" // The command that starts the daemon
+        killDaemon(daemonCommand) // Kill the running daemon
+        initMIFramework() // Restart the daemon
+    }
 
 }
