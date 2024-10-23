@@ -111,24 +111,24 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
 
         // Update the model using the generated traces
 //        LoggingUtil.getInfoLogger().info("MISH ---- Updating model")
-        forwardTracesToModelInferenceFrameWork(true, indBatchNr.toString())
+        forwardTracesToModelInferenceFrameWork(true, "new")
 
 //        waitForOutput(config.fitnessDir + "model_batch_nr_${indBatchNr}.dot")
 
         if (!waitForLearningStatus()) {
             restartDaemon()
-            forwardTracesToModelInferenceFrameWork(true, indBatchNr.toString())
+            forwardTracesToModelInferenceFrameWork(true, "new")
             waitForLearningStatus()
         }
 
         //Compute the fitness of the individuals using their traces
-        forwardTracesToModelInferenceFrameWork(false, indBatchNr.toString())
+        forwardTracesToModelInferenceFrameWork(false, "new")
 
-        waitForOutput(config.fitnessDir + "ff_fitness_${indBatchNr}.txt")
+        waitForOutput(config.fitnessDir + "ff_fitness_new.txt")
 
 //        LoggingUtil.getInfoLogger().info("MISH ---- Updating fitness of individuals using model")
         // Update the fitness values.
-        collectAndUpdateFitness(evaluatedPopulation, indBatchNr.toString())
+        collectAndUpdateFitness(evaluatedPopulation, "new")
 
         this.indBatchNr++ // update the batch of individuals that we have just run.
 
@@ -230,7 +230,7 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
         command.add("--execution_stats_file")
         command.add(executionStatsFilePath)
         command.add("--output_file")
-        command.add("${config.tracesDir}EvoMaster_logs_traces_${outName}.txt")
+        command.add("${config.tracesDir}EvoMaster_logs_traces_new.txt")
 
         if (indBatchNr > 0) {
             command.add("--read_from")
