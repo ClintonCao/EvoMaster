@@ -343,7 +343,7 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
             val reader = BufferedReader(InputStreamReader(process.inputStream))
             val processes = reader.readLines()
 
-            if (processes.size() == 0) {
+            if (processes.size == 0) {
                 return // in case that the daemon has already been exited
             }
 
