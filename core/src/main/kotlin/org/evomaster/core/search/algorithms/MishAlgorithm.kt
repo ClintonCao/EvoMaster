@@ -111,24 +111,24 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
 
         // Update the model using the generated traces
 //        LoggingUtil.getInfoLogger().info("MISH ---- Updating model")
-        forwardTracesToModelInferenceFrameWork(true, "new")
-
-//        waitForOutput(config.fitnessDir + "model_batch_nr_${indBatchNr}.dot")
+        forwardTracesToModelInferenceFrameWork(true, indBatchNr.toString())
 
         if (!waitForLearningStatus()) {
-            restartDaemon()
-            forwardTracesToModelInferenceFrameWork(true, "new")
+            LoggingUtil.getInfoLogger().info("MISH ---- No \"Done learning\" update received, trying to restart the model inference framework.")
+            restartMIFramework()
+            forwardTracesToModelInferenceFrameWork(true, indBatchNr.toString())
             waitForLearningStatus()
         }
 
         //Compute the fitness of the individuals using their traces
-        forwardTracesToModelInferenceFrameWork(false, "new")
+        forwardTracesToModelInferenceFrameWork(false, indBatchNr.toString())
 
-        waitForOutput(config.fitnessDir + "ff_fitness_new.txt")
+        // Wait for the output to be written by the model inference framework.
+        waitForOutput(config.fitnessDir + "ff_fitness_${indBatchNr}.txt")
 
 //        LoggingUtil.getInfoLogger().info("MISH ---- Updating fitness of individuals using model")
         // Update the fitness values.
-        collectAndUpdateFitness(evaluatedPopulation, "new")
+        collectAndUpdateFitness(evaluatedPopulation, indBatchNr.toString())
 
         this.indBatchNr++ // update the batch of individuals that we have just run.
 
@@ -230,7 +230,7 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
         command.add("--execution_stats_file")
         command.add(executionStatsFilePath)
         command.add("--output_file")
-        command.add("${config.tracesDir}EvoMaster_logs_traces_new.txt")
+        command.add("${config.tracesDir}EvoMaster_logs_traces_${outName}.txt")
 
         if (indBatchNr > 0) {
             command.add("--read_from")
@@ -250,7 +250,7 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
         val traces = File("${config.tracesDir}EvoMaster_logs_traces_${outName}.txt").readLines()
         for (i in 0 until evalInds.size) {
             if (fitnessValues.size <= i) {
-                LoggingUtil.getInfoLogger().info("MISH ff not available")
+                LoggingUtil.getInfoLogger().info("MISH --- Mismatch between number of fitness values and population size. Using default value of 0.0")
                 evalInds[i].fitness = 0.0
             } else {
                 evalInds[i].fitness = fitnessValues[i].trim().toDouble()
@@ -283,7 +283,7 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
     fun waitForOutput(outputFilePath: String): Boolean {
         val start = Instant.now()
         while (Duration.between(start, Instant.now()).toMillis() < config.timeOutForWaitingOutput) {
-            if (checkForFile(outputFilePath)) {
+            if (checkForFile(outputFilePath) && getNumLinesFromFile(outputFilePath) == config.populationSize) {
                 return true
             }
         }
@@ -345,16 +345,16 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
 
             // Iterate over the processes and extract the PID (process ID)
             for (processLine in processes) {
-                println("Found process: $processLine")
+                LoggingUtil.getInfoLogger().info("MISH (Restarting Daemon) --- Found process: $processLine")
                 val parts = processLine.trim().split("\\s+".toRegex())
                 if (parts.size > 1) {
                     val pid = parts[1] // The second column is the PID
-                    println("Killing process with PID: $pid")
+                    LoggingUtil.getInfoLogger().info("MISH (Restarting Daemon) --- Stopping MISH Daemon with PID: $pid")
 
                     // Kill the process by PID
                     val killProcess = ProcessBuilder("kill", pid).start()
                     killProcess.waitFor() // Wait for the kill command to execute
-                    println("Process with PID $pid killed.")
+                    LoggingUtil.getInfoLogger().info("MISH (Restarting Daemon) --- Deamon with PID $pid is stopped.")
                 }
             }
         } catch (e: Exception) {
@@ -362,7 +362,7 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
         }
     }
 
-    fun restartDaemon() {
+    fun restartMIFramework() {
         val daemonCommand = "./flexfringe --ini css-stream.ini" // The command that starts the daemon
         killDaemon(daemonCommand) // Kill the running daemon
         initMIFramework() // Restart the daemon
