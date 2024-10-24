@@ -217,20 +217,25 @@ class MishMosaAlgorithm<T> : MishAlgorithm<T>() where T: Individual {
 
         // Update the model using the generated traces
 //        LoggingUtil.getInfoLogger().info("MISH ---- Updating model")
-        forwardTracesToModelInferenceFrameWork(true, "new")
+        forwardTracesToModelInferenceFrameWork(true, indBatchNr.toString())
 
 //        waitForOutput(config.fitnessDir + "model_batch_nr_${indBatchNr}.dot")
 
-        waitForLearningStatus()
+        if (!waitForLearningStatus()) {
+            LoggingUtil.getInfoLogger().info("MISHMOSA ---- No \"Done learning\" update received, trying to restart the model inference framework.")
+            restartMIFramework()
+            forwardTracesToModelInferenceFrameWork(true, indBatchNr.toString())
+            waitForLearningStatus()
+        }
 
         //Compute the fitness of the individuals using their traces
-        forwardTracesToModelInferenceFrameWork(false, "new")
+        forwardTracesToModelInferenceFrameWork(false, inBatchNr.toString())
 
-        waitForOutput(config.fitnessDir + "ff_fitness_new.txt")
+        waitForOutput(config.fitnessDir + "ff_fitness_${indBatchNr}.txt")
 
 //        LoggingUtil.getInfoLogger().info("MISH ---- Updating fitness of individuals using model")
         // Update the fitness values.
-        updateDiversity(evaluatedPopulation, "new")
+        updateDiversity(evaluatedPopulation, indBatchNr.toString())
 
         this.indBatchNr++ // update the batch of individuals that we have just run.
 
@@ -246,7 +251,7 @@ class MishMosaAlgorithm<T> : MishAlgorithm<T>() where T: Individual {
 
         for (i in 0 until evalInds.size) {
             if (fitnessValues.size <= i) {
-                LoggingUtil.getInfoLogger().info("MISH ff not available")
+                LoggingUtil.getInfoLogger().info("MISHMOSA ---  Mismatch between number of fitness values and population size. Using default value of 0.0")
                 evalInds[i].crowdingDistance = 0.0
             } else {
                 evalInds[i].crowdingDistance = fitnessValues[i].trim().toDouble()
