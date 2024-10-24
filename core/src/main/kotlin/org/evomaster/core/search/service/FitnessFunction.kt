@@ -7,9 +7,10 @@ import org.evomaster.core.search.Individual
 import org.evomaster.core.search.service.monitor.SearchProcessMonitor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 
-abstract class FitnessFunction<T>  where T : Individual {
+abstract class  FitnessFunction<T>  where T : Individual {
 
     @Inject
     protected lateinit var configuration: EMConfig
@@ -111,16 +112,18 @@ abstract class FitnessFunction<T>  where T : Individual {
     }
 
     private fun calculateIndividualCoverageWithStats(individual: T, targets: Set<Int>, actionsSize: Int) : EvaluatedIndividual<T>?{
-
+        val startTime = LocalDateTime.now().format(config.modelInfTSFormat)
         val ei = SearchTimeController.measureTimeMillis(
-                { t, ind ->
-                    time.reportExecutedIndividualTime(t, actionsSize)
-                    ind?.executionTimeMs = t
-                },
-                {doCalculateCoverage(individual, targets, false)}
+            { t, ind ->
+                time.reportExecutedIndividualTime(t, actionsSize)
+                ind?.executionTimeMs = t
+            },
+            {doCalculateCoverage(individual, targets, false)}
         )
         // plugin execution info reporter here, to avoid the time spent by execution reporter
         handleExecutionInfo(ei)
+        val stopTime = LocalDateTime.now().format(config.modelInfTSFormat)
+        executionInfoReporter.addExecutedIndividualStats(startTime.toString(), stopTime.toString(), individual.seeMainExecutableActions())
         return ei
     }
     /**
@@ -141,5 +144,9 @@ abstract class FitnessFunction<T>  where T : Individual {
         ei?:return
         executionInfoReporter.sqlExecutionInfo(ei.individual.seeAllActions(), ei.fitness.databaseExecutions)
         executionInfoReporter.actionExecutionInfo(ei.individual, ei.executionTimeMs, time.evaluatedIndividuals)
+    }
+
+    public fun getExecutionInfoReporter(): ExecutionInfoReporter {
+        return this.executionInfoReporter
     }
 }

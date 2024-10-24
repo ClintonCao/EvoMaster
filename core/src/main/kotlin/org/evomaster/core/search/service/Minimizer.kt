@@ -11,6 +11,7 @@ import org.evomaster.core.search.service.mutator.StructureMutator
 import org.evomaster.core.sql.SqlAction
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.File
 
 /**
  * Reduce/simplify the final test outputs.
@@ -222,6 +223,10 @@ class Minimizer<T: Individual> {
         LoggingUtil.getInfoLogger().info("Recomputing full coverage for ${current.size} tests")
 
         val beforeCovered = archive.coveredTargets()
+
+        // Print out the number of uniquely covered targets.
+        LoggingUtil.getInfoLogger().info("The number of uniquely covered targets: ${beforeCovered.size}")
+        LoggingUtil.getInfoLogger().info("The covered targets are: $beforeCovered")
 
         /*
             Previously evaluated individual only had partial info, due to performance issues.

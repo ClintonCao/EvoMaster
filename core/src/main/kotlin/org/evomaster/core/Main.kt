@@ -32,10 +32,7 @@ import org.evomaster.core.remote.SutProblemException
 import org.evomaster.core.remote.service.RemoteController
 import org.evomaster.core.remote.service.RemoteControllerImplementation
 import org.evomaster.core.search.Solution
-import org.evomaster.core.search.algorithms.MioAlgorithm
-import org.evomaster.core.search.algorithms.MosaAlgorithm
-import org.evomaster.core.search.algorithms.RandomAlgorithm
-import org.evomaster.core.search.algorithms.WtsAlgorithm
+import org.evomaster.core.search.algorithms.*
 import org.evomaster.core.search.service.*
 import org.evomaster.core.search.service.monitor.SearchProcessMonitor
 import org.evomaster.core.search.service.mutator.genemutation.ArchiveImpactSelector
@@ -245,6 +242,9 @@ class Main {
 
                         info("Covered targets (lines, branches, faults, etc.): ${targetsInfo.total}")
                         info("Potential faults: ${faults.size}")
+                        info("Potential faults IDs: ${faults.toMutableSet()}")
+                        info("Potential 500 faults IDs: ${solution.overall.potential500Faults(idMapper).size}")
+                        info("Potential faults IDs: ${solution.overall.potential500Faults(idMapper).toMutableSet()}")
 
                         if(totalLines == 0 || units == 0){
                             logError("Detected $totalLines lines to cover, for a total of $units units/classes." +
@@ -477,6 +477,12 @@ class Main {
                 config.algorithm == EMConfig.Algorithm.MOSA ->
                     Key.get(object : TypeLiteral<MosaAlgorithm<WebIndividual>>() {})
 
+                config.algorithm == EMConfig.Algorithm.MISH ->
+                    Key.get(object : TypeLiteral<MishAlgorithm<WebIndividual>>() {})
+
+                config.algorithm == EMConfig.Algorithm.MISHMOSA ->
+                    Key.get(object : TypeLiteral<MishMosaAlgorithm<WebIndividual>>() {})
+
                 else -> throw IllegalStateException("Unrecognized algorithm ${config.algorithm}")
             }
         }
@@ -495,6 +501,12 @@ class Main {
 
                 config.algorithm == EMConfig.Algorithm.MOSA ->
                     Key.get(object : TypeLiteral<MosaAlgorithm<RestIndividual>>() {})
+
+                config.algorithm == EMConfig.Algorithm.MISH ->
+                    Key.get(object : TypeLiteral<MishAlgorithm<RestIndividual>>() {})
+
+                config.algorithm == EMConfig.Algorithm.MISHMOSA ->
+                    Key.get(object : TypeLiteral<MishMosaAlgorithm<RestIndividual>>() {})
 
                 else -> throw IllegalStateException("Unrecognized algorithm ${config.algorithm}")
             }
@@ -580,9 +592,9 @@ class Main {
 
             val config = injector.getInstance(EMConfig::class.java)
 
-            if (config.outputExecutedSQL != EMConfig.OutputExecutedSQL.ALL_AT_END && !config.recordExecutedMainActionInfo) {
-                return
-            }
+//            if (config.outputExecutedSQL != EMConfig.OutputExecutedSQL.ALL_AT_END && !config.recordExecutedMainActionInfo) {
+//                return
+//            }
             val reporter = injector.getInstance(ExecutionInfoReporter::class.java)
             reporter.saveAll()
         }

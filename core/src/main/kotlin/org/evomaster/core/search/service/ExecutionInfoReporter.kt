@@ -7,6 +7,8 @@ import org.evomaster.core.search.action.Action
 import org.evomaster.core.search.Individual
 import org.evomaster.core.utils.ReportWriter.wrapWithQuotation
 import org.evomaster.core.utils.ReportWriter.writeByChannel
+import java.io.BufferedWriter
+import java.io.File
 import java.nio.file.Paths
 
 /**
@@ -18,6 +20,15 @@ class ExecutionInfoReporter {
     private lateinit var config: EMConfig
 
     private val executedAction: MutableList<String> = mutableListOf()
+
+    /**
+     * Keep track of some other execution info.
+     */
+    private var executedIndividualsStats: MutableList<String> = mutableListOf()
+
+    private var executedIndividualId: Int = 1
+
+    private var lastWrittenIndividualId: Int = 0
 
     /**
      * record the latest computation overhead between tests
@@ -106,6 +117,11 @@ class ExecutionInfoReporter {
         }
     }
 
+
+    fun saveIntermediateExecutionStats(outName: String) {
+        saveExecutedIndividualStatsToFile(config.executionStatsDir, outName)
+    }
+
     private fun getRowString(info: Array<String>) = info.joinToString(",")
 
     private fun getOneRow(action: String, sqlInfo: DatabaseExecution, output: Boolean){
@@ -135,5 +151,27 @@ class ExecutionInfoReporter {
             Paths.get(config.saveExecutedMainActionInfo),
             executedMainAction.joinToString(System.lineSeparator()) {it},
             false)
+    }
+
+    fun addExecutedIndividualStats(startTime: String, endTime: String, mainActions: List<Action>) {
+        this.executedIndividualsStats.add("$executedIndividualId,$startTime,$endTime,${mainActions.size},${mainActions.joinToString(separator="|")}")
+        this.executedIndividualId += 1
+    }
+
+    private fun saveExecutedIndividualStatsToFile(out_location: String, outName: String){
+        val writer = File("${out_location}EvoMasterExecutionStats_${outName}.csv").bufferedWriter()
+        var lastIndividualId = -1
+        for (s in executedIndividualsStats) {
+            val id = s.split(',')[0].toInt()
+            if (id <= lastWrittenIndividualId) {
+                continue
+            }
+            else{
+                lastIndividualId = id
+                writer.write(s + "\n")
+            }
+        }
+        writer.close()
+        lastWrittenIndividualId = lastIndividualId
     }
 }

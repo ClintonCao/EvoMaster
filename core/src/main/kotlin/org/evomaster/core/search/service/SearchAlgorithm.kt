@@ -69,9 +69,7 @@ abstract class SearchAlgorithm<T> where T : Individual {
         setupBeforeSearch()
 
         while (time.shouldContinueSearch()) {
-
             searchOnce()
-
             if (needsToSnapshot() && writeTestsSnapshot != null) {
                 lastSnapshot = time.getElapsedSeconds()
                 val partialSolution = archive.extractSolution()
@@ -95,6 +93,11 @@ abstract class SearchAlgorithm<T> where T : Individual {
             minimizer.simplifyActions()
             val seconds = minimizer.passedTimeInSecond()
             LoggingUtil.getInfoLogger().info("Minimization phase took $seconds seconds")
+        } else {
+            // Print out the number of uniquely covered targets.
+            LoggingUtil.getInfoLogger().info("The number of uniquely covered targets: ${archive.coveredTargets().size}")
+            LoggingUtil.getInfoLogger().info("The covered targets are: ${archive.coveredTargets()}")
+
         }
 
         if(config.addPreDefinedTests) {

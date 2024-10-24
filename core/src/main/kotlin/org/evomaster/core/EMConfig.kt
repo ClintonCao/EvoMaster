@@ -17,6 +17,7 @@ import java.net.URL
 import java.nio.file.Files
 import java.nio.file.InvalidPathException
 import java.nio.file.Paths
+import java.time.format.DateTimeFormatter
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.jvm.javaType
 
@@ -47,6 +48,8 @@ class EMConfig {
         private const val targetExclusionRegex = "^($targetNone|($targetPrefix($targetSeparator$targetPrefix)*))\$"
 
         private const val maxTcpPort = 65535.0
+
+        const val executionInfoOutputLocation = ""
 
         /**
          * Maximum possible length for strings.
@@ -804,7 +807,7 @@ class EMConfig {
     var avoidNonDeterministicLogs = false
 
     enum class Algorithm {
-        MIO, RANDOM, WTS, MOSA
+        MIO, RANDOM, WTS, MOSA, MISH, MISHMOSA
     }
 
     @Cfg("The algorithm used to generate test cases")
@@ -1764,7 +1767,7 @@ class EMConfig {
     @Cfg("Apply a minimization phase to make the generated tests more readable." +
             " Achieved coverage would stay the same." +
             " Generating shorter test cases might come at the cost of having more test cases.")
-    var minimize : Boolean = true
+    var minimize : Boolean = false
 
 
     @Cfg("Maximum number of minutes that will be dedicated to the minimization phase." +
@@ -1939,6 +1942,30 @@ class EMConfig {
 
     var excludedTargetsForImpactCollection : List<String> = extractExcludedTargetsForImpactCollection()
         private set
+
+    @Cfg("Path to the log processing script that generates traces for the model inference framework.")
+    var modelInfLogProcessorScriptPath = "${System.getProperty("user.dir")}/mish/scripts/logs_processor.py"
+
+    @Cfg("Path to the log file containing logs produced by the test cases")
+    var logFilePath = "${System.getProperty("user.dir")}/mish/logs/msa_logs.txt"
+
+    @Cfg("Path to the directory containing the execution stats of the individuals.")
+    var executionStatsDir = "${System.getProperty("user.dir")}/mish/execution_stats/"
+
+    @Cfg("Path to the directory containing the traces generated from the processed logs.")
+    var tracesDir = "${System.getProperty("user.dir")}/mish/traces/"
+
+    @Cfg("Timestamp format that is used for the model inference framework and scripts.")
+    val modelInfTSFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
+
+    @Cfg("Path to directory containing the fitness values of each population, computed by the model inference framework.")
+    var fitnessDir = "${System.getProperty("user.dir")}/mish/fitness/"
+
+    @Cfg("Path to the named file used by the model inference framework to receive input.")
+    var modelInfFrameworkNamedFilePath = "/tmp/flexfringe_fifo"
+
+    @Cfg("Amount of time to wait for output/update from the model inference framework. (e.g. fitness, model, learning, etc.)")
+    var timeOutForWaitingOutput = 90000
 
     fun timeLimitInSeconds(): Int {
         if (maxTimeInSeconds > 0) {
