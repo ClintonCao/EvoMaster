@@ -285,7 +285,7 @@ class Main {
                 }
 
                 if (config.stoppingCriterion == EMConfig.StoppingCriterion.TIME &&
-                        config.maxTime == config.defaultMaxTime) {
+                    config.maxTime == config.defaultMaxTime) {
                     info(inGreen("To obtain better results, use the '--maxTime' option" +
                             " to run the search for longer"))
                 }
@@ -322,8 +322,8 @@ class Main {
                 }
 
                 val info = rc.getSutInfo()
-                        ?: throw SutProblemException("No 'problemType' was defined, but failed to retried the needed" +
-                                " info from the EM Driver.")
+                    ?: throw SutProblemException("No 'problemType' was defined, but failed to retried the needed" +
+                            " info from the EM Driver.")
 
                 if(info.restProblem != null){
                     config.problemType = EMConfig.ProblemType.REST
@@ -380,9 +380,9 @@ class Main {
 
             val injector = try {
                 LifecycleInjector.builder()
-                        .withModules(base, problemModule)
-                        .build()
-                        .createInjector()
+                    .withModules(base, problemModule)
+                    .build()
+                    .createInjector()
 
             } catch (e: Error) {
                 /*
@@ -390,7 +390,7 @@ class Main {
                     https://github.com/Netflix/governator/issues/371
                  */
                 if (e.cause != null &&
-                        InvocationTargetException::class.java.isAssignableFrom(e.cause!!.javaClass)) {
+                    InvocationTargetException::class.java.isAssignableFrom(e.cause!!.javaClass)) {
                     throw e.cause!!
                 }
 
@@ -562,7 +562,7 @@ class Main {
                     " Used experimental settings: $options")
         }
 
-         fun checkState(injector: Injector): ControllerInfoDto? {
+        fun checkState(injector: Injector): ControllerInfoDto? {
 
             val config = injector.getInstance(EMConfig::class.java)
 
@@ -573,7 +573,7 @@ class Main {
             val rc = injector.getInstance(RemoteController::class.java)
 
             val dto = rc.getControllerInfo() ?: throw IllegalStateException(
-                    "Cannot retrieve Remote Controller info from ${rc.address()}")
+                "Cannot retrieve Remote Controller info from ${rc.address()}")
 
             if (dto.isInstrumentationOn != true) {
                 LoggingUtil.getInfoLogger().warn("The system under test is running without instrumentation")

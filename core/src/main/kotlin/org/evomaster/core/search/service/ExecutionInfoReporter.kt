@@ -55,8 +55,8 @@ class ExecutionInfoReporter {
 
         if (!hasHeader && sqlExecutionInfo.values.any { it.executionInfo.isNotEmpty() }){
             writeByChannel(
-                    Paths.get(config.saveExecutedSQLToFile),
-                    getRowString(arrayOf("endpoint","sqlCommand","executionTime"))+System.lineSeparator())
+                Paths.get(config.saveExecutedSQLToFile),
+                getRowString(arrayOf("endpoint","sqlCommand","executionTime"))+System.lineSeparator())
             hasHeader = true
         }
 
@@ -80,7 +80,7 @@ class ExecutionInfoReporter {
             /*
                 executed time for all actions in this individual show at the first index
              */
-             aindex, action -> "$index , ${wrapWithQuotation(action.getName())} ,${wrapWithQuotation(extractActionInfo(action))} , ${wrapWithQuotation("${if (aindex == 0) executedTimes?:"" else ""}")}"
+                aindex, action -> "$index , ${wrapWithQuotation(action.getName())} ,${wrapWithQuotation(extractActionInfo(action))} , ${wrapWithQuotation("${if (aindex == 0) executedTimes?:"" else ""}")}"
         }
         )
     }

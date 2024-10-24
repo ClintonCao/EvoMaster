@@ -96,7 +96,7 @@ class EMConfig {
             val parser = OptionParser()
 
             parser.accepts("help", "Print this help documentation")
-                    .forHelp()
+                .forHelp()
 
             getConfigurationProperties().forEach { m ->
                 /*
@@ -112,12 +112,12 @@ class EMConfig {
                  */
 
                 val argTypeName = m.returnType.toString()
-                        .run { substring(lastIndexOf('.') + 1) }
+                    .run { substring(lastIndexOf('.') + 1) }
 
                 parser.accepts(m.name, getDescription(m).toString())
-                        .withRequiredArg()
-                        .describedAs(argTypeName)
-                        .defaultsTo(m.call(defaultInstance).toString())
+                    .withRequiredArg()
+                    .describedAs(argTypeName)
+                    .defaultsTo(m.call(defaultInstance).toString())
             }
 
             parser.formatHelpWith(MyHelpFormatter())
@@ -126,12 +126,12 @@ class EMConfig {
         }
 
         class ConfigDescription(
-                val text: String,
-                val constraints: String,
-                val enumExperimentalValues: String,
-                val enumValidValues: String,
-                val experimental: Boolean,
-                val debug: Boolean
+            val text: String,
+            val constraints: String,
+            val enumExperimentalValues: String,
+            val enumValidValues: String,
+            val experimental: Boolean,
+            val debug: Boolean
         ) {
             override fun toString(): String {
 
@@ -232,8 +232,8 @@ class EMConfig {
 
         fun getConfigurationProperties(): List<KMutableProperty<*>> {
             return EMConfig::class.members
-                    .filterIsInstance(KMutableProperty::class.java)
-                    .filter { it.annotations.any { it is Cfg } }
+                .filterIsInstance(KMutableProperty::class.java)
+                .filter { it.annotations.any { it is Cfg } }
         }
     }
 
@@ -333,7 +333,7 @@ class EMConfig {
                 throw IllegalArgumentException("Changing number of max actions, but stopping criterion is time")
             }
             StoppingCriterion.FITNESS_EVALUATIONS -> if (maxTimeInSeconds != defaultMaxTimeInSeconds ||
-                    maxTime != defaultMaxTime) {
+                maxTime != defaultMaxTime) {
                 throw IllegalArgumentException("Changing max time, but stopping criterion is based on fitness evaluations")
             }
         }
@@ -366,8 +366,8 @@ class EMConfig {
         }
 
         if ((outputFilePrefix.contains("-") || outputFileSuffix.contains("-"))
-                    && outputFormat.isJavaOrKotlin()) { //TODO also for C#?
-             throw IllegalArgumentException("In JVM languages, you cannot use the symbol '-' in test suite file name")
+            && outputFormat.isJavaOrKotlin()) { //TODO also for C#?
+            throw IllegalArgumentException("In JVM languages, you cannot use the symbol '-' in test suite file name")
         }
 
         if (seedTestCases && seedTestCasesPath.isNullOrBlank()) {
@@ -498,7 +498,7 @@ class EMConfig {
 
     private fun updateProperty(options: OptionSet, m: KMutableProperty<*>) {
         val opt = options.valueOf(m.name)?.toString()
-                ?: throw IllegalArgumentException("Value not found for property ${m.name}")
+            ?: throw IllegalArgumentException("Value not found for property ${m.name}")
 
         val returnType = m.returnType.javaType as Class<*>
 
@@ -529,7 +529,7 @@ class EMConfig {
 
                 } else if (returnType.isEnum) {
                     val valueOfMethod = returnType.getDeclaredMethod("valueOf",
-                            java.lang.String::class.java)
+                        java.lang.String::class.java)
                     m.setter.call(this, valueOfMethod.invoke(null, opt))
 
                 } else {
@@ -544,36 +544,36 @@ class EMConfig {
         excludedTargetsForImpactCollection = extractExcludedTargetsForImpactCollection()
     }
 
-    fun shouldGenerateSqlData() = isMIO() && (generateSqlDataWithDSE || generateSqlDataWithSearch)
+    fun shouldGenerateSqlData() = (isMIO() || isMOSA() || isMISH()) && (generateSqlDataWithDSE || generateSqlDataWithSearch)
 
     fun shouldGenerateMongoData() = generateMongoData
 
     fun experimentalFeatures(): List<String> {
 
         val properties = getConfigurationProperties()
-                .filter { it.annotations.find { it is Experimental } != null }
-                .filter {
-                    val returnType = it.returnType.javaType as Class<*>
-                    when {
-                        java.lang.Boolean.TYPE.isAssignableFrom(returnType) -> it.getter.call(this) as Boolean
-                        it.annotations.find { p -> p is Probability && p.activating } != null -> (it.getter.call(this) as Double) > 0
-                        else -> false
-                    }
+            .filter { it.annotations.find { it is Experimental } != null }
+            .filter {
+                val returnType = it.returnType.javaType as Class<*>
+                when {
+                    java.lang.Boolean.TYPE.isAssignableFrom(returnType) -> it.getter.call(this) as Boolean
+                    it.annotations.find { p -> p is Probability && p.activating } != null -> (it.getter.call(this) as Double) > 0
+                    else -> false
                 }
-                .map { it.name }
+            }
+            .map { it.name }
 
         val enums = getConfigurationProperties()
-                .filter {
-                    val returnType = it.returnType.javaType as Class<*>
-                    if (returnType.isEnum) {
-                        val e = it.getter.call(this)
-                        val f = returnType.getField(e.toString())
-                        f.annotations.find { it is Experimental } != null
-                    } else {
-                        false
-                    }
+            .filter {
+                val returnType = it.returnType.javaType as Class<*>
+                if (returnType.isEnum) {
+                    val e = it.getter.call(this)
+                    val f = returnType.getField(e.toString())
+                    f.annotations.find { it is Experimental } != null
+                } else {
+                    false
                 }
-                .map { "${it.name}=${it.getter.call(this)}" }
+            }
+            .map { "${it.name}=${it.getter.call(this)}" }
 
         return properties.plus(enums)
     }
@@ -626,13 +626,13 @@ class EMConfig {
     @Target(AnnotationTarget.PROPERTY)
     @MustBeDocumented
     annotation class Probability(
-            /**
-             * Specify if this probability would activate a functionality if greater than 0.
-             * If not, it might still not be used, depending on other configurations.
-             * This is mainly needed when dealing with @Experimental probabilities that must
-             * be put to 0 if they would activate a new feature that is still unstable
-             */
-            val activating: Boolean = true
+        /**
+         * Specify if this probability would activate a functionality if greater than 0.
+         * If not, it might still not be used, depending on other configurations.
+         * This is mainly needed when dealing with @Experimental probabilities that must
+         * be put to 0 if they would activate a new feature that is still unstable
+         */
+        val activating: Boolean = true
     )
 
 
@@ -654,11 +654,11 @@ class EMConfig {
     @Target(AnnotationTarget.PROPERTY)
     @MustBeDocumented
     annotation class Important(
-            /**
-             * The lower value, the more importance.
-             * This only impact of options are sorted when displayed
-             */
-            val priority: Double
+        /**
+         * The lower value, the more importance.
+         * This only impact of options are sorted when displayed
+         */
+        val priority: Double
     )
 
     @Target(AnnotationTarget.PROPERTY)
@@ -814,9 +814,9 @@ class EMConfig {
     var algorithm = Algorithm.MIO
 
     /**
-    * Workaround for issues with annotations that can not be applied on ENUM values,
-    * like @Experimental
-    * */
+     * Workaround for issues with annotations that can not be applied on ENUM values,
+     * like @Experimental
+     * */
     interface WithExperimentalOptions{
         fun isExperimental() : Boolean
     }
@@ -858,8 +858,8 @@ class EMConfig {
     var maxTestsPerTestSuite = -1
 
     @Cfg("Generate an executive summary, containing an example of each category of potential fault found." +
-                    "NOTE: This option is only meaningful when used in conjuction with clustering. " +
-                    "This is achieved by turning the option --testSuiteSplitType to CLUSTER")
+            "NOTE: This option is only meaningful when used in conjuction with clustering. " +
+            "This is achieved by turning the option --testSuiteSplitType to CLUSTER")
     var executiveSummary = true
 
     @Cfg("The Distance Metric Last Line may use several values for epsilon." +
@@ -2014,7 +2014,7 @@ class EMConfig {
     /**
      * @return whether enable resource-based method
      */
-    fun isEnabledResourceStrategy() = isMIO() && resourceSampleStrategy != ResourceSamplingStrategy.NONE
+    fun isEnabledResourceStrategy() = (isMIO() || isMOSA() || isMISH()) && (resourceSampleStrategy != ResourceSamplingStrategy.NONE)
 
     /**
      * @return whether enable resource-dependency based method
@@ -2053,9 +2053,9 @@ class EMConfig {
         return IdMapper.ALL_ACCEPTED_OBJECTIVE_PREFIXES.filter { excluded.contains(it.lowercase()) }
     }
 
-    fun isEnabledMutatingResponsesBasedOnActualResponse() = isMIO() && (probOfMutatingResponsesBasedOnActualResponse > 0)
+    fun isEnabledMutatingResponsesBasedOnActualResponse() = (isMIO() || isMOSA() || isMISH()) && (probOfMutatingResponsesBasedOnActualResponse > 0)
 
-    fun isEnabledHarvestingActualResponse() : Boolean = isMIO() && (probOfHarvestingResponsesFromActualExternalServices > 0 || probOfMutatingResponsesBasedOnActualResponse > 0)
+    fun isEnabledHarvestingActualResponse() : Boolean = (isMIO() || isMOSA() || isMISH()) && (probOfHarvestingResponsesFromActualExternalServices > 0 || probOfMutatingResponsesBasedOnActualResponse > 0)
 
     /**
      * Check if the used algorithm is MIO.
@@ -2065,13 +2065,17 @@ class EMConfig {
      */
     fun isMIO() = algorithm == Algorithm.MIO
 
-    fun isEnabledTaintAnalysis() = isMIO() && baseTaintAnalysisProbability > 0
+    fun isMOSA() = algorithm == Algorithm.MOSA || algorithm == Algorithm.MISHMOSA
 
-    fun isEnabledSmartSampling() = isMIO() && probOfSmartSampling > 0
+    fun isMISH() = algorithm == Algorithm.MISH
 
-    fun isEnabledWeightBasedMutation() = isMIO() && weightBasedMutationRate
+    fun isEnabledTaintAnalysis() = (isMIO() || isMOSA() || isMISH()) && baseTaintAnalysisProbability > 0
 
-    fun isEnabledInitializationStructureMutation() = isMIO() && initStructureMutationProbability > 0 && maxSizeOfMutatingInitAction > 0
+    fun isEnabledSmartSampling() = (isMIO() || isMOSA() || isMISH()) && probOfSmartSampling > 0
 
-    fun isEnabledResourceSizeHandling() = isMIO() && probOfHandlingLength> 0 && maxSizeOfHandlingResource > 0
+    fun isEnabledWeightBasedMutation() = (isMIO() || isMOSA() || isMISH()) && weightBasedMutationRate
+
+    fun isEnabledInitializationStructureMutation() = (isMIO() || isMOSA() || isMISH()) && initStructureMutationProbability > 0 && maxSizeOfMutatingInitAction > 0
+
+    fun isEnabledResourceSizeHandling() = (isMIO() || isMOSA() || isMISH()) && probOfHandlingLength> 0 && maxSizeOfHandlingResource > 0
 }

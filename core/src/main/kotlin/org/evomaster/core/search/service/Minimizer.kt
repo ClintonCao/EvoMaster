@@ -87,8 +87,8 @@ class Minimizer<T: Individual> {
     fun minimizeMainActionsPerCoveredTargetInArchive() {
 
         if(checkHasTimedout()){
-           LoggingUtil.getInfoLogger().warn("Minimization phase has timed-out. You can use --minimizeTimeout to increase it.")
-           return
+            LoggingUtil.getInfoLogger().warn("Minimization phase has timed-out. You can use --minimizeTimeout to increase it.")
+            return
         }
 
         LoggingUtil.getInfoLogger().info("Starting to apply minimization phase")
@@ -162,7 +162,7 @@ class Minimizer<T: Individual> {
           TODO a further problem is that, for some custom tests, we have no group definitions
       */
         return ind.groupsView()?.sizeOfGroup(GroupsOfChildren.MAIN)
-                ?: ind.size()
+            ?: ind.size()
     }
 
     private fun splitIntoSingleCalls(ind: T) : List<T>{
@@ -177,9 +177,9 @@ class Minimizer<T: Individual> {
 
         return (0 until n)
             .map {index ->  (copy.copy() as T)
-                                .apply {
-                                    removeAllMainActionsButIndex(this,index)
-                                }
+                .apply {
+                    removeAllMainActionsButIndex(this,index)
+                }
             }
     }
 
