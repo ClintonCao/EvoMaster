@@ -229,7 +229,7 @@ class MishMosaAlgorithm<T> : MishAlgorithm<T>() where T: Individual {
         }
 
         //Compute the fitness of the individuals using their traces
-        forwardTracesToModelInferenceFrameWork(false, inBatchNr.toString())
+        forwardTracesToModelInferenceFrameWork(false, indBatchNr.toString())
 
         waitForOutput(config.fitnessDir + "ff_fitness_${indBatchNr}.txt")
 
