@@ -243,8 +243,8 @@ class Main {
                         info("Covered targets (lines, branches, faults, etc.): ${targetsInfo.total}")
                         info("Potential faults: ${faults.size}")
                         info("Potential faults IDs: ${faults.toMutableSet()}")
-                        info("Potential 500 faults IDs: ${solution.overall.potential500Faults(idMapper).size}")
-                        info("Potential faults IDs: ${solution.overall.potential500Faults(idMapper).toMutableSet()}")
+                        info("Potential 500 faults: ${solution.overall.potential500Faults(idMapper).size}")
+                        info("Potential 500 faults IDs: ${solution.overall.potential500Faults(idMapper).toMutableSet()}")
 
                         if(totalLines == 0 || units == 0){
                             logError("Detected $totalLines lines to cover, for a total of $units units/classes." +
