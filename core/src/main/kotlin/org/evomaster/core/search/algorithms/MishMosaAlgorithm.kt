@@ -205,6 +205,10 @@ class MishMosaAlgorithm<T> : MishAlgorithm<T>() where T: Individual {
             }
         }
 
+        if (!time.shouldContinueSearch()) {
+            return evaluatedPopulation
+        }
+
 //        LoggingUtil.getInfoLogger().info("MISH ---- Finished running individuals")
 
         // Saving execution statistics of the individuals
