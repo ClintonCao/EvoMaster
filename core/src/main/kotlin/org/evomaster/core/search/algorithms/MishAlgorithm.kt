@@ -61,12 +61,18 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
         // Generate temporary temp trace file from individuals of previous generation.
         generateTempTraceFile(parentPop, "tempParent")
 
-        waitForOutput(config.tracesDir + "EvoMaster_logs_traces_tempParent.txt")
+        if (!waitForOutput(config.tracesDir + "EvoMaster_logs_traces_tempParent.txt")) {
+            generateTempTraceFile(parentPop, "tempParent")
+            waitForOutput(config.tracesDir + "EvoMaster_logs_traces_tempParent.txt")
+        }
 
         // Compute new fitness of the parent based on the updated model.
         forwardTracesToModelInferenceFrameWork(false, "tempParent")
 
-        waitForOutput(config.fitnessDir + "ff_fitness_tempParent.txt")
+        if (!waitForOutput(config.fitnessDir + "ff_fitness_tempParent.txt")) {
+            forwardTracesToModelInferenceFrameWork(false, "tempParent")
+            waitForOutput(config.fitnessDir + "ff_fitness_tempParent.txt")
+        }
 
         // Collect and update the fitness of the parent
         collectAndUpdateFitness(parentPop, "tempParent")
@@ -124,7 +130,10 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
         forwardTracesToModelInferenceFrameWork(false, indBatchNr.toString())
 
         // Wait for the output to be written by the model inference framework.
-        waitForOutput(config.fitnessDir + "ff_fitness_${indBatchNr}.txt")
+        if (!waitForOutput(config.fitnessDir + "ff_fitness_${indBatchNr}.txt")) {
+            forwardTracesToModelInferenceFrameWork(false, indBatchNr.toString())
+            waitForOutput(config.fitnessDir + "ff_fitness_${indBatchNr}.txt")
+        }
 
 //        LoggingUtil.getInfoLogger().info("MISH ---- Updating fitness of individuals using model")
         // Update the fitness values.
@@ -342,6 +351,10 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
             // Read the output of 'ps' command
             val reader = BufferedReader(InputStreamReader(process.inputStream))
             val processes = reader.readLines()
+
+            if (processes.size == 0) {
+                return // in case that the daemon has already been exited
+            }
 
             // Iterate over the processes and extract the PID (process ID)
             for (processLine in processes) {
