@@ -105,6 +105,10 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
             }
         }
 
+        if (!time.shouldContinueSearch()) {
+            return evaluatedPopulation
+        }
+
 //        LoggingUtil.getInfoLogger().info("MISH ---- Finished running individuals")
 
         // Saving execution statistics of the individuals
