@@ -110,6 +110,10 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
         // Saving execution statistics of the individuals
 //        LoggingUtil.getInfoLogger().info("MISH ---- Saving execution stats of individuals")
         ff.getExecutionInfoReporter().saveIntermediateExecutionStats(indBatchNr.toString())
+        if (!waitForOutput("${config.executionStatsDir}EvoMasterExecutionStats_${indBatchNr}.csv")) {
+            ff.getExecutionInfoReporter().saveIntermediateExecutionStats(indBatchNr.toString())
+            waitForOutput("${config.executionStatsDir}EvoMasterExecutionStats_${indBatchNr}.csv")
+        }
 
         // Generate traces for the individuals we just ran
 //        LoggingUtil.getInfoLogger().info("MISH ---- Generating traces for the individuals")
