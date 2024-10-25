@@ -210,6 +210,10 @@ class MishMosaAlgorithm<T> : MishAlgorithm<T>() where T: Individual {
         // Saving execution statistics of the individuals
 //        LoggingUtil.getInfoLogger().info("MISH ---- Saving execution stats of individuals")
         ff.getExecutionInfoReporter().saveIntermediateExecutionStats(indBatchNr.toString())
+        if (!waitForOutput("${config.executionStatsDir}EvoMasterExecutionStats_${indBatchNr}.csv")) {
+            ff.getExecutionInfoReporter().saveIntermediateExecutionStats(indBatchNr.toString())
+            waitForOutput("${config.executionStatsDir}EvoMasterExecutionStats_${indBatchNr}.csv")
+        }
 
         // Generate traces for the individuals we just ran
 //        LoggingUtil.getInfoLogger().info("MISH ---- Generating traces for the individuals")
@@ -301,12 +305,18 @@ class MishMosaAlgorithm<T> : MishAlgorithm<T>() where T: Individual {
         // Generate temporary temp trace file from individuals of previous generation.
         generateTempTraceFile(parentPop, "tempParent")
 
-        waitForOutput(config.tracesDir + "EvoMaster_logs_traces_tempParent.txt")
+        if (!waitForOutput(config.tracesDir + "EvoMaster_logs_traces_tempParent.txt")) {
+            generateTempTraceFile(parentPop, "tempParent")
+            waitForOutput(config.tracesDir + "EvoMaster_logs_traces_tempParent.txt")
+        }
 
         // Compute new fitness of the parent based on the updated model.
         forwardTracesToModelInferenceFrameWork(false, "tempParent")
 
-        waitForOutput(config.fitnessDir + "ff_fitness_tempParent.txt")
+        if (!waitForOutput(config.fitnessDir + "ff_fitness_tempParent.txt")) {
+            forwardTracesToModelInferenceFrameWork(false, "tempParent")
+            waitForOutput(config.fitnessDir + "ff_fitness_tempParent.txt")
+        }
 
         // Collect and update the fitness of the parent
         updateDiversity(parentPop, "tempParent")
@@ -326,7 +336,7 @@ class MishMosaAlgorithm<T> : MishAlgorithm<T>() where T: Individual {
 
     private fun generateOffspringPop(candidates:MutableList<EvalData>): MutableList<Individual> {
         val offspringPop: MutableList<Individual> = mutableListOf()
-        while(offspringPop.size < config.populationSize - 3) {
+        while(offspringPop.size < config.populationSize - config.populationSize - (config.populationSize * 0.1).toInt()) {
             // select best candidate based on tournament selection
             val bestCandidate = selection(candidates)
 
