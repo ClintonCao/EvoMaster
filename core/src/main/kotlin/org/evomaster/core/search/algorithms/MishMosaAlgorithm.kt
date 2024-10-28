@@ -340,7 +340,7 @@ class MishMosaAlgorithm<T> : MishAlgorithm<T>() where T: Individual {
 
     private fun generateOffspringPop(candidates:MutableList<EvalData>): MutableList<Individual> {
         val offspringPop: MutableList<Individual> = mutableListOf()
-        while(offspringPop.size < config.populationSize - config.populationSize - (config.populationSize * 0.1).toInt()) {
+        while(offspringPop.size < config.populationSize - (config.populationSize * 0.1).toInt()) {
             // select best candidate based on tournament selection
             val bestCandidate = selection(candidates)
 
