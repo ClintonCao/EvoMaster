@@ -48,23 +48,27 @@ def read_log_file(filename):
     
 
 def main():
-    application_to_paper_application_name = {'catwatch': 'CatWatch', 'features-service': 'Features-Service', 'languagetool': 'LanguageTool', 'proxyprint': 'ProxyPrint', 'scout-api': 'Scout-API'}
-    for application in tqdm(application_to_paper_application_name.keys(), desc='Applications'):
-        methods = ['MOSA', 'MISH', 'MISHMOSA']
-        base_budget = np.linspace(0, 100, 101)
-        runs = 10
-        versions = ['v200']
-        plot_out_folder = f'../convergence_plots/{application}/'
-        if not os.path.exists(plot_out_folder):
-            os.makedirs(plot_out_folder)
+    applications = ['catwatch', 'features-service', 'scout-api', 'proxyprint', 'languagetool']
+    application_to_paper_application_name = {'catwatch': 'CatWatch', 'features-service': 'Features-Service', 'scout-api': 'Scout-API', 'proxyprint': 'ProxyPrint', 'languagetool': 'LanguageTool'}
+    methods = ['MOSA', 'MISH', 'MISHMOSA']
+    base_budget = np.linspace(0, 100, 101)
+    fitness_abbrev = {'lower_median': 'LM', 'weighted_size': 'WS'}
+    runs = 10
+    versions = ['v200', 'v320']
+
+    for application in tqdm(applications):
         for version in versions:
-            fitness_functions = ['lower_median', 'weighted_size']
-            fitness_abbrev = {'lower_median': 'LM', 'weighted_size': 'WS'}
             method_run_data = []
-            for fitness_function in fitness_functions:
-                results_folder = f'../../results_{application}_{version}_{fitness_function}_latest'
-                for m in methods:
-                    if m == 'MOSA' and fitness_function == 'weighted_size':
+            plot_output_folder = f'../convergence_plots/{application}'
+            if not os.path.exists(plot_output_folder):
+                os.makedirs(plot_output_folder)
+            
+            for m in methods:
+                for fitness_function in fitness_abbrev.keys():
+                    results_folder = f'../../results_{application}_{version}_{fitness_function}_latest'
+
+                    # We don't use MISH's fitness functions for MOSA, so we only need to collect the results from the folder of lower median.
+                    if m == 'MOSA' and fitness_function == 'weighted_size': 
                         continue
 
                     for i in range(1, runs + 1):
@@ -78,22 +82,22 @@ def main():
                                 method_run_data.append([m, i, base_budget[j], interp_coverage[j]])
                             else:
                                 method_run_data.append([m + '-' + fitness_abbrev[fitness_function], i, base_budget[j], interp_coverage[j]])
-                
+        
             df = pd.DataFrame(method_run_data, columns=['Method', 'Run', 'Budget', 'Coverage'])
-            # df.to_csv(f'{results_folder}/coverage_data.csv', index=False)
             # Create the line plot
             plt.figure(figsize=(12, 8))
-            # set heu to be colorblind friendly
+            # set hue pallette to be more colorblind friendly
             sns.set_palette("colorblind")
+            # also add markers to make plots more colorblind friendely
             sns.lineplot(data=df, x='Budget', y='Coverage', hue='Method', style='Method', markers=True, alpha=0.7, dashes=False, errorbar=('ci', 95), linewidth=4.0)
-            
+
             # Customize the plot
             plt.title(f'Coverage Over Time - {application_to_paper_application_name[application]}')
             plt.xlabel('Budget Used (%)')
             plt.ylabel('Coverage (Targets)')
             plt.grid(True)
             plt.legend(title='Algorithm')
-            plt.savefig(f'{plot_out_folder}/{application}_{version}_coverage_over_time_plot.png')
+            plt.savefig(f'{plot_output_folder}/{application}_{version}_coverage_over_time_plot.pdf', format='pdf')
             # clear the plot for the next version
             plt.clf()
 
