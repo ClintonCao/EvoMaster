@@ -59,6 +59,8 @@ def get_log_message_content(line):
         #count number of "." in the string
         if parts[i].count('.') >= 2:
             return ' '.join(parts[i:])
+        elif 'WARN' in parts[i] or 'INFO' in parts[i] or 'ERROR' in parts[i]:
+                return ' '.join(parts[i + 1:])
         else:
             continue
 
