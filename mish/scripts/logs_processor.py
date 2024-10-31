@@ -55,7 +55,6 @@ def get_log_message_content(line):
         int: the log message content
     """
     parts = line.split(' ')
-    print(parts)
     for i in range(0, len(parts)):
         #count number of "." in the string
         if parts[i].count('.') >= 2:
