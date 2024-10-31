@@ -3,6 +3,7 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 from tqdm import tqdm
+import os
 
 def plot_coverage_over_time(coverages, title, filename):
     _, ax = plt.subplots()
@@ -47,39 +48,58 @@ def read_log_file(filename):
     
 
 def main():
-    application = f'catwatch'
+    applications = ['catwatch', 'features-service', 'scout-api', 'proxyprint', 'languagetool']
+    application_to_paper_application_name = {'catwatch': 'CatWatch', 'features-service': 'Features-Service', 'scout-api': 'Scout-API', 'proxyprint': 'ProxyPrint', 'languagetool': 'LanguageTool'}
     methods = ['MOSA', 'MISH', 'MISHMOSA']
     base_budget = np.linspace(0, 100, 101)
+    fitness_abbrev = {'lower_median': 'LM', 'weighted_size': 'WS'}
     runs = 10
-    version = 'v320'
-    fitness_function = 'lower_median'
-    results_folder = f'../../results_{application}_{version}_{fitness_function}_1hour_better_selection_strat'
-    method_run_data = []
-    for m in methods:
-        for i in range(1, runs + 1):
-            filename = f'{results_folder}/{application}_with_500_faults_EM_logs_{m}_{i}.txt'
-            coverage_info = read_log_file(filename)
-            budget = [x[0] for x in coverage_info]
-            covered_targets = [x[1] for x in coverage_info]
-            interp_coverage = interp_coverage_values(base_budget, budget, covered_targets)
-            for j in range(len(interp_coverage)):
-                method_run_data.append([m, i, base_budget[j], interp_coverage[j]])
+    versions = ['v200', 'v320']
+
+    for application in tqdm(applications):
+        for version in versions:
+            method_run_data = []
+            plot_output_folder = f'../convergence_plots/{application}'
+            if not os.path.exists(plot_output_folder):
+                os.makedirs(plot_output_folder)
+            
+            for m in methods:
+                for fitness_function in fitness_abbrev.keys():
+                    results_folder = f'../../results_{application}_{version}_{fitness_function}_latest'
+
+                    # We don't use MISH's fitness functions for MOSA, so we only need to collect the results from the folder of lower median.
+                    if m == 'MOSA' and fitness_function == 'weighted_size': 
+                        continue
+
+                    for i in range(1, runs + 1):
+                        filename = f'{results_folder}/{application}_with_500_faults_EM_logs_{m}_{i}.txt'
+                        coverage_info = read_log_file(filename)
+                        budget = [x[0] for x in coverage_info]
+                        covered_targets = [x[1] for x in coverage_info]
+                        interp_coverage = interp_coverage_values(base_budget, budget, covered_targets)
+                        for j in range(len(interp_coverage)):
+                            if m == 'MOSA':
+                                method_run_data.append([m, i, base_budget[j], interp_coverage[j]])
+                            else:
+                                method_run_data.append([m + '-' + fitness_abbrev[fitness_function], i, base_budget[j], interp_coverage[j]])
         
-    df = pd.DataFrame(method_run_data, columns=['Method', 'Run', 'Budget', 'Coverage'])
-    df.to_csv(f'{results_folder}/coverage_data.csv', index=False)
-    # Create the line plot
-    plt.figure(figsize=(10, 6))
-    sns.lineplot(data=df, x='Budget', y='Coverage', hue='Method', errorbar=('ci', 95))
-    
-    # Customize the plot
-    plt.title(f'Coverage over time EvoMaster - {application} - {version}')
-    plt.xlabel('Budget Used (%)')
-    plt.ylabel('Coverage (Targets)')
-    plt.grid(True)
+            df = pd.DataFrame(method_run_data, columns=['Method', 'Run', 'Budget', 'Coverage'])
+            # Create the line plot
+            plt.figure(figsize=(12, 8))
+            # set hue pallette to be more colorblind friendly
+            sns.set_palette("colorblind")
+            # also add markers to make plots more colorblind friendely
+            sns.lineplot(data=df, x='Budget', y='Coverage', hue='Method', style='Method', markers=True, alpha=0.7, dashes=False, errorbar=('ci', 95), linewidth=4.0)
 
-    # Show the plot
-    plt.show()
-
+            # Customize the plot
+            plt.title(f'Coverage Over Time - {application_to_paper_application_name[application]}')
+            plt.xlabel('Budget Used (%)')
+            plt.ylabel('Coverage (Targets)')
+            plt.grid(True)
+            plt.legend(title='Algorithm')
+            plt.savefig(f'{plot_output_folder}/{application}_{version}_coverage_over_time_plot.pdf', format='pdf')
+            # clear the plot for the next version
+            plt.clf()
 
 
 if __name__ == '__main__':
