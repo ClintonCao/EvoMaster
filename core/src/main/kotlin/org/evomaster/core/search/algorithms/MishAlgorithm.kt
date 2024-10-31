@@ -202,7 +202,7 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
 //        LoggingUtil.getInfoLogger().info("MISH ---- Initializing Population")
         val initPop = mutableListOf<Individual>()
         while (initPop.size < config.populationSize) {
-            initPop.add(sampler.sample(true)) // generate a random individual
+            initPop.add(sampler.sample()) // generate a new individual
         }
         return initPop
     }
