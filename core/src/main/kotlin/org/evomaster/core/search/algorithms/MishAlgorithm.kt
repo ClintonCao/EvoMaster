@@ -185,7 +185,7 @@ open class MishAlgorithm<T> : SearchAlgorithm<T>() where T: Individual {
 
         // Add a few random indviduals to increase exploration.
         while (offspringPop.size < config.populationSize) {
-            offspringPop.add(sampler.sample(true))
+            offspringPop.add(sampler.sample())
         }
 
         return offspringPop
